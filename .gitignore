@@ -1,0 +1,11 @@
+# Compiled Java files
+out/
+*.class
+
+# Local secrets
+.env
+.env.*
+!.env.example
+
+# IDE settings
+.DS_Store
