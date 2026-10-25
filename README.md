@@ -1,110 +1,171 @@
 # CampusChat 💬
 
-A simple **Java-based real-time chat application** built using **Java Swing** and **Socket Programming**.
+A Java-based real-time chat application built using **Java Swing, Socket Programming, and MySQL**. CampusChat demonstrates client-server communication, object-oriented programming, multithreading, and database integration through a simple desktop messaging application.
 
-## Features
+## ✨ Features
 
-* 🔐 User Login
-* 💬 Real-time messaging
-* 👥 Multiple users
-* 🟢 Online user list
-* 🔒 Private messaging
-* 🖥️ Java Swing GUI
-* 🌐 Client–Server architecture
+- 🔐 User login and authentication
+- 💬 Real-time public messaging
+- 👥 Multiple connected users
+- 🟢 Online user list
+- 🔒 Private messaging
+- 💾 Persistent message storage using MySQL
+- 📜 Chat history retrieved from the database
+- 🖥️ Retro terminal-inspired Java Swing interface
+- 🌐 Client-server architecture
+- 🧵 Multithreaded client handling
 
-## Tech Stack
+## 🛠️ Tech Stack
 
-* **Java**
-* **Java Swing** — GUI
-* **Java Sockets** — Networking
-* **OOP Concepts**
-* **Multithreading**
+- **Java** — Core application logic
+- **Java Swing** — Graphical user interface
+- **Java Sockets** — Client-server communication
+- **MySQL** — Persistent message storage
+- **JDBC** — Database connectivity
+- **Object-Oriented Programming** — Application design
+- **Multithreading** — Handling multiple client connections
 
-## Project Structure
+## 📁 Project Structure
 
 ```text
-src/com/campuschat/
-│
-├── client/
-│   ├── ChatClient.java
-│   ├── ChatClientGUI.java
-│   └── LoginScreen.java
-│
-├── model/
-│   └── User.java
-│
-├── server/
-│   ├── ChatServer.java
-│   └── ClientHandler.java
-│
-└── Main.java
+CampusConnect/
+├── lib/
+│   └── mysql-connector-j-26.10.0.jar
+├── out/
+└── src/
+    └── com/campuschat/
+        ├── Main.java
+        ├── client/
+        │   ├── ChatClient.java
+        │   ├── ChatClientGUI.java
+        │   └── LoginScreen.java
+        ├── model/
+        │   └── User.java
+        └── server/
+            ├── ChatServer.java
+            ├── ClientHandler.java
+            ├── DatabaseManager.java
+            ├── DatabaseTest.java
+            └── CRUDTest.java
 ```
 
-## How to Run
+## ⚙️ Prerequisites
 
-### 1. Compile
+Before running the application, make sure you have:
 
-From the project root:
+- Java JDK installed
+- MySQL Server installed and running
+- MySQL Connector/J JDBC driver in the `lib/` directory
+- A terminal or IDE such as VS Code
+
+## 🗄️ Database Setup
+
+Create the database in MySQL:
+
+```sql
+CREATE DATABASE campuschat_db;
+USE campuschat_db;
+```
+
+Create the `users` table:
+
+```sql
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+Create the `messages` table:
+
+```sql
+CREATE TABLE messages (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    sender VARCHAR(50) NOT NULL,
+    receiver VARCHAR(50) DEFAULT NULL,
+    message TEXT NOT NULL,
+    sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+**Database configuration:** Update the connection URL, username, and password in `DatabaseManager.java` to match your local MySQL configuration. Never commit real database credentials to GitHub.
+
+## 🚀 How to Run
+
+Run the following commands from the project root directory.
+
+### 1. Compile the application
 
 ```bash
-javac -d out $(find src -name "*.java")
+javac -cp "lib/*" -d out $(find src -name "*.java")
 ```
 
-### 2. Start the application
+### 2. Start CampusChat
 
 ```bash
-java -cp out com.campuschat.Main
+java -cp "out:lib/*" com.campuschat.Main
 ```
 
-The server will start on:
+The application starts with the server on **port 5000** and opens the client login interface, according to the current application configuration.
+
+> **Important:** Include `lib/*` in the classpath so Java can load the MySQL JDBC driver.
+
+## 🔑 Demo Accounts
+
+The current server configuration includes these demo accounts:
+
+| Username | Password |
+|---|---|
+| `user1` | `pass123` |
+| `user2` | `pass123` |
+
+Open separate client windows and log in with different accounts to test messaging.
+
+*Note: These demo accounts are currently configured in the server code. Database-backed user registration and authentication should be documented separately once implemented.*
+
+## 🏗️ Architecture
 
 ```text
-Port: 5000
+       Client 1                         Client 2
+          │                                │
+          ▼                                ▼
+   ChatClientGUI                    ChatClientGUI
+          │                                │
+          └───────────┬────────────────────┘
+                      ▼
+                 ChatServer
+                      │
+              ┌───────┴────────┐
+              ▼                ▼
+       ClientHandler      ClientHandler
+              │                │
+              └───────┬────────┘
+                      ▼
+               DatabaseManager
+                      │
+                      ▼
+                   MySQL
+               (campuschat_db)
 ```
 
-Two login windows will open for testing.
+## 🧠 OOP Concepts Demonstrated
 
-### Demo Accounts
+- **Classes and Objects** — Representing clients, users, and server components
+- **Encapsulation** — Organizing data and behavior within classes
+- **Constructors** — Initializing application objects
+- **Interfaces** — Using Java interfaces such as `Runnable`
+- **Polymorphism** — Using interface implementations and method behavior
+- **Exception Handling** — Handling networking and database errors
+- **Multithreading** — Processing multiple client connections concurrently
 
-```text
-Username: user1
-Password: pass123
+## 🎯 Project Goal
 
-Username: user2
-Password: pass123
-```
+CampusChat is an academic Object-Oriented Programming project that demonstrates how a desktop chat application can be built using Java Swing, socket programming, multithreading, and MySQL database integration.
 
-Login with different accounts in the two windows to test chatting.
+The project provides practical experience with client-server architecture, real-time communication, and persistent data storage.
 
-## Architecture
+---
 
-```text
-        Client 1
-           │
-           │
-        Client 2
-           │
-           ▼
-      Chat Server
-           │
-     ┌─────┴─────┐
-     │           │
-ClientHandler  ClientHandler
-     │           │
-   User 1      User 2
-```
-
-## OOP Concepts Used
-
-* Classes & Objects
-* Encapsulation
-* Constructors
-* Inheritance
-* Interfaces
-* Polymorphism
-* Exception Handling
-* Multithreading
-
-## Project
-
-**CampusChat** is an academic OOP project demonstrating how a Java client-server chat application can be built using **Swing, sockets, and object-oriented programming**.
+**Built with ☕ Java and 💚 curiosity.**
