@@ -1,22 +1,15 @@
+
 package com.campuschat.server;
 
-import java.sql.SQLException;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Main server for CampusChat.
- *
- * Responsibilities:
- * - Accept client connections
- * - Maintain registered users
- * - Maintain currently connected clients
- * - Broadcast and route messages
- */
 public class ChatServer {
+
     public static final int PORT = 5000;
 
     private final Map<String, String> registeredUsers =
@@ -52,23 +45,36 @@ public class ChatServer {
     }
 
     public boolean registerUser(String username, String password) {
+        if (username == null || password == null
+                || username.isBlank() || password.isBlank()
+                || username.contains("|") || password.contains("|")) {
+            return false;
+        }
+
         return registeredUsers.putIfAbsent(username, password) == null;
     }
 
     public boolean authenticate(String username, String password) {
+        if (username == null || password == null) {
+            return false;
+        }
+
         String storedPassword = registeredUsers.get(username);
         return storedPassword != null && storedPassword.equals(password);
     }
 
-    public boolean addConnectedClient(String username, ClientHandler handler) {
+    public boolean addConnectedClient(
+            String username, ClientHandler handler) {
         return connectedClients.putIfAbsent(username, handler) == null;
     }
 
     public void removeConnectedClient(String username) {
         if (username != null) {
             connectedClients.remove(username);
+
             broadcastSystemMessage(username + " disconnected.");
             broadcastUserList();
+
             System.out.println(username + " disconnected.");
         }
     }
@@ -77,66 +83,94 @@ public class ChatServer {
         return connectedClients.get(username);
     }
 
-    
-public void broadcastMessage(String sender, String message) {
-    try {
-        DatabaseManager.saveMessage(sender, null, message);
-    } catch (Exception e) {
-        System.err.println("Could not save public message: " + e.getMessage());
-    }
-
-    String formattedMessage = "MESSAGE|" + sender + "|" + message;
-
-    for (ClientHandler client : connectedClients.values()) {
-        client.send(formattedMessage);
-    }
-
-    System.out.println(sender + ": " + message);
-}
-
-
-   
-public void sendPrivateMessage(
-        String sender,
-        String recipient,
-        String message
-) {
-    ClientHandler recipientHandler = connectedClients.get(recipient);
-
-    if (recipientHandler == null) {
-        ClientHandler senderHandler = connectedClients.get(sender);
-
-        if (senderHandler != null) {
-            senderHandler.send(
-                    "ERROR|User '" + recipient + "' is not online."
-            );
+    public void broadcastMessage(String sender, String message) {
+        try {
+            DatabaseManager.saveMessage(sender, null, message);
+        } catch (Exception e) {
+            System.err.println(
+                    "Could not save public message: " + e.getMessage());
         }
 
-        return;
+        String encodedMessage = encode(message);
+        String formattedMessage =
+                "MESSAGE|" + sender + "|" + encodedMessage;
+
+        for (ClientHandler client : connectedClients.values()) {
+            client.send(formattedMessage);
+        }
+
+        System.out.println(sender + ": " + message);
     }
 
-    try {
-        DatabaseManager.saveMessage(sender, recipient, message);
-    } catch (Exception e) {
-        System.err.println("Could not save private message: " + e.getMessage());
+    public void sendPrivateMessage(
+            String sender, String recipient, String message) {
+
+        ClientHandler recipientHandler = connectedClients.get(recipient);
+
+        if (recipientHandler == null) {
+            ClientHandler senderHandler = connectedClients.get(sender);
+
+            if (senderHandler != null) {
+                senderHandler.send(
+                        "ERROR|User '" + recipient + "' is not online.");
+            }
+            return;
+        }
+
+        try {
+            DatabaseManager.saveMessage(sender, recipient, message);
+        } catch (Exception e) {
+            System.err.println(
+                    "Could not save private message: " + e.getMessage());
+        }
+
+        String encodedMessage = encode(message);
+        String formattedMessage =
+                "PRIVATE|" + sender + "|" + recipient + "|"
+                        + encodedMessage;
+
+        recipientHandler.send(formattedMessage);
+
+        ClientHandler senderHandler = connectedClients.get(sender);
+        if (senderHandler != null && !sender.equals(recipient)) {
+            senderHandler.send(formattedMessage);
+        }
+
+        System.out.println(
+                "[Private] " + sender + " -> " + recipient + ": " + message);
     }
 
-    String formattedMessage =
-            "PRIVATE|" + sender + "|" + recipient + "|" + message;
-
-    recipientHandler.send(formattedMessage);
-
-    ClientHandler senderHandler = connectedClients.get(sender);
-
-    if (senderHandler != null && !sender.equals(recipient)) {
-        senderHandler.send(formattedMessage);
+    public List<String[]> getChatHistory(String username) {
+        return DatabaseManager.getHistoryForUser(username);
     }
 
-    System.out.println(
-            "[Private] " + sender + " -> " + recipient + ": " + message
-    );
-}
+    public void sendChatHistory(String username, ClientHandler client) {
+        try {
+            List<String[]> history = getChatHistory(username);
 
+            for (String[] item : history) {
+                String sender = item[0];
+                String receiver = item[1] == null ? "" : item[1];
+                String message = item[2];
+                String timestamp = item[3];
+
+                client.send(
+                        "HISTORY|" + sender + "|" + receiver + "|"
+                                + timestamp + "|" + encode(message));
+            }
+        } catch (Exception e) {
+            System.err.println(
+                    "Could not load chat history for " + username
+                            + ": " + e.getMessage());
+
+            client.send("ERROR|Could not load chat history.");
+        }
+    }
+
+    private String encode(String message) {
+        return java.util.Base64.getEncoder().encodeToString(
+                message.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+    }
 
     public void broadcastSystemMessage(String message) {
         String formattedMessage = "SYSTEM|" + message;
@@ -147,20 +181,11 @@ public void sendPrivateMessage(
     }
 
     public void broadcastUserList() {
-        StringBuilder users = new StringBuilder();
-
-        for (String username : connectedClients.keySet()) {
-            if (users.length() > 0) {
-                users.append(",");
-            }
-
-            users.append(username);
-        }
-
-        String message = "USERS|" + users;
+        String users = String.join(",", connectedClients.keySet());
+        String formattedMessage = "USERS|" + users;
 
         for (ClientHandler client : connectedClients.values()) {
-            client.send(message);
+            client.send(formattedMessage);
         }
     }
 

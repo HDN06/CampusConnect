@@ -1,6 +1,8 @@
 
 package com.campuschat.server;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -111,4 +113,45 @@ public class DatabaseManager {
             System.out.println("MySQL connection failed: " + e.getMessage());
         }
     }
+
+    // READ: Get public messages and private messages involving this user
+    public static java.util.List<String[]> getHistoryForUser(
+            String username) {
+
+        java.util.List<String[]> history = new java.util.ArrayList<>();
+
+        String sql = """
+                SELECT sender, receiver, message, sent_at
+                FROM messages
+                WHERE receiver IS NULL
+                   OR sender = ?
+                   OR receiver = ?
+                ORDER BY sent_at ASC, id ASC
+                """;
+
+        try (Connection con = getConnection();
+             java.sql.PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, username);
+            ps.setString(2, username);
+
+            try (java.sql.ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    history.add(new String[] {
+                            rs.getString("sender"),
+                            rs.getString("receiver"),
+                            rs.getString("message"),
+                            rs.getTimestamp("sent_at").toString()
+                    });
+                }
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Could not load chat history: "
+                    + e.getMessage());
+        }
+
+        return history;
+    }
+
 }
