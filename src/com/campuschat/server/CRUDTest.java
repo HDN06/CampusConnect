@@ -12,10 +12,26 @@ public class CRUDTest {
         System.out.println("CREATE: " + saved);
 
         // READ
-        System.out.println("\nSaved messages:");
+        System.out.println("\nMessages before update:");
         DatabaseManager.getMessages();
 
-        // UPDATE and DELETE will be tested using a message ID
-        // after confirming that CREATE and READ work.
+        // UPDATE message ID 1
+        boolean updated = DatabaseManager.updateMessage(
+                1, "This message was updated!");
+
+        System.out.println("\nUPDATE message 1: " + updated);
+
+        // READ again
+        System.out.println("\nMessages after update:");
+        DatabaseManager.getMessages();
+
+        // DELETE message ID 1
+        boolean deleted = DatabaseManager.deleteMessage(1);
+
+        System.out.println("\nDELETE message 1: " + deleted);
+
+        // READ again
+        System.out.println("\nMessages after delete:");
+        DatabaseManager.getMessages();
     }
 }

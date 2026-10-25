@@ -1,5 +1,6 @@
 package com.campuschat.server;
 
+import java.sql.SQLException;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -76,51 +77,66 @@ public class ChatServer {
         return connectedClients.get(username);
     }
 
-    public void broadcastMessage(String sender, String message) {
-        String formattedMessage = "MESSAGE|" + sender + "|" + message;
-
-        for (ClientHandler client : connectedClients.values()) {
-            client.send(formattedMessage);
-        }
-
-        System.out.println(sender + ": " + message);
+    
+public void broadcastMessage(String sender, String message) {
+    try {
+        DatabaseManager.saveMessage(sender, null, message);
+    } catch (Exception e) {
+        System.err.println("Could not save public message: " + e.getMessage());
     }
 
-    public void sendPrivateMessage(
-            String sender,
-            String recipient,
-            String message
-    ) {
-        ClientHandler recipientHandler = connectedClients.get(recipient);
+    String formattedMessage = "MESSAGE|" + sender + "|" + message;
 
-        if (recipientHandler == null) {
-            ClientHandler senderHandler = connectedClients.get(sender);
+    for (ClientHandler client : connectedClients.values()) {
+        client.send(formattedMessage);
+    }
 
-            if (senderHandler != null) {
-                senderHandler.send(
-                        "ERROR|User '" + recipient + "' is not online."
-                );
-            }
+    System.out.println(sender + ": " + message);
+}
 
-            return;
-        }
 
-        String formattedMessage =
-                "PRIVATE|" + sender + "|" + recipient + "|" + message;
+   
+public void sendPrivateMessage(
+        String sender,
+        String recipient,
+        String message
+) {
+    ClientHandler recipientHandler = connectedClients.get(recipient);
 
-        recipientHandler.send(formattedMessage);
-
-        // Also display the private message in the sender's window.
+    if (recipientHandler == null) {
         ClientHandler senderHandler = connectedClients.get(sender);
 
-        if (senderHandler != null && !sender.equals(recipient)) {
-            senderHandler.send(formattedMessage);
+        if (senderHandler != null) {
+            senderHandler.send(
+                    "ERROR|User '" + recipient + "' is not online."
+            );
         }
 
-        System.out.println(
-                "[Private] " + sender + " -> " + recipient + ": " + message
-        );
+        return;
     }
+
+    try {
+        DatabaseManager.saveMessage(sender, recipient, message);
+    } catch (Exception e) {
+        System.err.println("Could not save private message: " + e.getMessage());
+    }
+
+    String formattedMessage =
+            "PRIVATE|" + sender + "|" + recipient + "|" + message;
+
+    recipientHandler.send(formattedMessage);
+
+    ClientHandler senderHandler = connectedClients.get(sender);
+
+    if (senderHandler != null && !sender.equals(recipient)) {
+        senderHandler.send(formattedMessage);
+    }
+
+    System.out.println(
+            "[Private] " + sender + " -> " + recipient + ": " + message
+    );
+}
+
 
     public void broadcastSystemMessage(String message) {
         String formattedMessage = "SYSTEM|" + message;
