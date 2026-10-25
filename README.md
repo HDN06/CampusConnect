@@ -1,29 +1,33 @@
-# CampusChat 💬
+# CampusConnect 💬
 
-A Java-based real-time chat application built using **Java Swing, Socket Programming, and MySQL**. CampusChat demonstrates client-server communication, object-oriented programming, multithreading, and database integration through a simple desktop messaging application.
+**A Java-Based Real-Time Chat Application**
+
+CampusConnect (CampusChat) is a desktop messaging application developed using Java, Java Swing, Socket Programming, and MySQL. It enables users to communicate in real time through a client-server architecture while demonstrating Object-Oriented Programming (OOP), multithreading, networking, and database integration.
 
 ## ✨ Features
 
-- 🔐 User login and authentication
-- 💬 Real-time public messaging
-- 👥 Multiple connected users
-- 🟢 Online user list
-- 🔒 Private messaging
-- 💾 Persistent message storage using MySQL
-- 📜 Chat history retrieved from the database
-- 🖥️ Retro terminal-inspired Java Swing interface
-- 🌐 Client-server architecture
-- 🧵 Multithreaded client handling
+- 🔐 **User Login** — Authentication using predefined demo accounts.
+- 💬 **Real-Time Messaging** — Send public messages to connected users.
+- 🔒 **Private Messaging** — Send messages to a specific online user.
+- 👥 **Multiple Users** — Supports multiple simultaneous client connections.
+- 🟢 **Online User List** — View currently connected users.
+- 💾 **Message Persistence** — Store messages in a MySQL database.
+- 📜 **Chat History** — Retrieve previously saved messages.
+- 🖥️ **Java Swing GUI** — Desktop interface with a retro terminal-inspired theme.
+- 🧵 **Multithreading** — Handle individual client connections concurrently.
 
 ## 🛠️ Tech Stack
 
-- **Java** — Core application logic
-- **Java Swing** — Graphical user interface
-- **Java Sockets** — Client-server communication
-- **MySQL** — Persistent message storage
-- **JDBC** — Database connectivity
-- **Object-Oriented Programming** — Application design
-- **Multithreading** — Handling multiple client connections
+| Technology | Purpose |
+|---|---|
+| Java | Core application logic |
+| Java Swing | Graphical user interface |
+| Java Socket Programming | Client-server communication |
+| MySQL | Persistent message storage |
+| JDBC | Java database connectivity |
+| MySQL Connector/J | MySQL JDBC driver |
+| Multithreading | Concurrent client handling |
+| OOP | Application structure and design |
 
 ## 📁 Project Structure
 
@@ -31,7 +35,7 @@ A Java-based real-time chat application built using **Java Swing, Socket Program
 CampusConnect/
 ├── lib/
 │   └── mysql-connector-j-26.10.0.jar
-├── out/
+├── out/                         # Compiled classes (generated)
 └── src/
     └── com/campuschat/
         ├── Main.java
@@ -51,26 +55,28 @@ CampusConnect/
 
 ## ⚙️ Prerequisites
 
-Before running the application, make sure you have:
+Make sure you have the following installed:
 
-- Java JDK installed
-- MySQL Server installed and running
-- MySQL Connector/J JDBC driver in the `lib/` directory
-- A terminal or IDE such as VS Code
+- Java JDK
+- MySQL Server
+- MySQL Connector/J JDBC driver
+- VS Code or another Java IDE
 
 ## 🗄️ Database Setup
 
-Create the database in MySQL:
+### 1. Create the database
+
+Open your MySQL terminal and run:
 
 ```sql
-CREATE DATABASE campuschat_db;
+CREATE DATABASE IF NOT EXISTS campuschat_db;
 USE campuschat_db;
 ```
 
-Create the `users` table:
+### 2. Create the users table
 
 ```sql
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
@@ -78,10 +84,10 @@ CREATE TABLE users (
 );
 ```
 
-Create the `messages` table:
+### 3. Create the messages table
 
 ```sql
-CREATE TABLE messages (
+CREATE TABLE IF NOT EXISTS messages (
     id INT AUTO_INCREMENT PRIMARY KEY,
     sender VARCHAR(50) NOT NULL,
     receiver VARCHAR(50) DEFAULT NULL,
@@ -90,27 +96,55 @@ CREATE TABLE messages (
 );
 ```
 
-**Database configuration:** Update the connection URL, username, and password in `DatabaseManager.java` to match your local MySQL configuration. Never commit real database credentials to GitHub.
+### 4. Configure the database connection
+
+Open `src/com/campuschat/server/DatabaseManager.java` and configure the JDBC connection URL, username, and password to match your local MySQL setup.
+
+Example connection URL:
+
+```java
+jdbc:mysql://localhost:3306/campuschat_db
+```
+
+**Security:** Never commit real database passwords or other credentials to GitHub.
 
 ## 🚀 How to Run
 
-Run the following commands from the project root directory.
+Run these commands from the project root directory.
 
-### 1. Compile the application
+### 1. Navigate to the project
+
+```bash
+cd CampusConnect
+```
+
+If your terminal is already open in the project folder, skip this step.
+
+### 2. Start MySQL
+
+On macOS with Homebrew:
+
+```bash
+brew services start mysql
+```
+
+If MySQL is already running, you can skip this command.
+
+### 3. Compile the Java source files
 
 ```bash
 javac -cp "lib/*" -d out $(find src -name "*.java")
 ```
 
-### 2. Start CampusChat
+### 4. Launch CampusConnect
 
 ```bash
 java -cp "out:lib/*" com.campuschat.Main
 ```
 
-The application starts with the server on **port 5000** and opens the client login interface, according to the current application configuration.
+The application launches using the configured client/server startup flow. The server listens on port **5000**.
 
-> **Important:** Include `lib/*` in the classpath so Java can load the MySQL JDBC driver.
+> **Important:** Include `lib/*` in the classpath so Java can load the MySQL JDBC driver. Running with only `-cp out` may cause a `No suitable driver found` error.
 
 ## 🔑 Demo Accounts
 
@@ -121,21 +155,127 @@ The current server configuration includes these demo accounts:
 | `user1` | `pass123` |
 | `user2` | `pass123` |
 
-Open separate client windows and log in with different accounts to test messaging.
+Open separate client windows and log in using different accounts to test messaging.
 
-*Note: These demo accounts are currently configured in the server code. Database-backed user registration and authentication should be documented separately once implemented.*
+> **Note:** Authentication currently uses accounts predefined in the Java server. Although a `users` table exists in MySQL, database-backed user registration and authentication are not implemented in the current login flow.
 
-## 🏗️ Architecture
+## 🗃️ View the Database and Chat History
+
+You can inspect saved messages directly from the VS Code terminal.
+
+### 1. Connect to MySQL
+
+```bash
+mysql -u root -p
+```
+
+Enter your MySQL password when prompted.
+
+If your MySQL installation uses a different database username, replace `root` with that username.
+
+### 2. Select the database
+
+Run these commands inside the MySQL prompt:
+
+```sql
+USE campuschat_db;
+```
+
+### 3. View all saved messages
+
+```sql
+SELECT
+    id,
+    sender,
+    receiver,
+    message,
+    sent_at
+FROM messages
+ORDER BY sent_at ASC, id ASC;
+```
+
+This displays the stored message ID, sender, recipient, content, and timestamp.
+
+### 4. View public messages
+
+```sql
+SELECT
+    sender,
+    message,
+    sent_at
+FROM messages
+WHERE receiver IS NULL
+ORDER BY sent_at ASC, id ASC;
+```
+
+Public messages have a `NULL` receiver.
+
+### 5. View private messages
+
+```sql
+SELECT
+    sender,
+    receiver,
+    message,
+    sent_at
+FROM messages
+WHERE receiver IS NOT NULL
+ORDER BY sent_at ASC, id ASC;
+```
+
+Private messages include both the sender and recipient.
+
+### 6. View chat history associated with a user
+
+Example for `user1`:
+
+```sql
+SELECT
+    sender,
+    receiver,
+    message,
+    sent_at
+FROM messages
+WHERE receiver IS NULL
+   OR sender = 'user1'
+   OR receiver = 'user1'
+ORDER BY sent_at ASC, id ASC;
+```
+
+This retrieves all public messages and private messages where `user1` is either the sender or recipient.
+
+### 7. View the database tables
+
+```sql
+SHOW TABLES;
+```
+
+To inspect the table structure:
+
+```sql
+DESCRIBE messages;
+DESCRIBE users;
+```
+
+### 8. Exit MySQL
+
+```sql
+EXIT;
+```
+
+**Tip:** Send some messages through CampusConnect before running the queries. This lets you see actual records saved by the application.
+
+## 🏗️ System Architecture
 
 ```text
        Client 1                         Client 2
           │                                │
           ▼                                ▼
-   ChatClientGUI                    ChatClientGUI
+   Java Swing GUI                   Java Swing GUI
           │                                │
           └───────────┬────────────────────┘
                       ▼
-                 ChatServer
+                  ChatServer
                       │
               ┌───────┴────────┐
               ▼                ▼
@@ -145,27 +285,54 @@ Open separate client windows and log in with different accounts to test messagin
                       ▼
                DatabaseManager
                       │
+                 JDBC Driver
+                      │
                       ▼
-                   MySQL
-               (campuschat_db)
+                    MySQL
+                campuschat_db
 ```
+
+### How it works
+
+1. Users log in through the desktop interface.
+2. The client communicates with the server using Java sockets.
+3. The server validates the configured demo credentials and manages connected clients.
+4. Public messages are broadcast to connected users.
+5. Private messages are forwarded to the specified online recipient.
+6. The database manager stores messages in MySQL.
+7. Clients can request previously saved chat history from the database.
 
 ## 🧠 OOP Concepts Demonstrated
 
-- **Classes and Objects** — Representing clients, users, and server components
-- **Encapsulation** — Organizing data and behavior within classes
-- **Constructors** — Initializing application objects
-- **Interfaces** — Using Java interfaces such as `Runnable`
-- **Polymorphism** — Using interface implementations and method behavior
-- **Exception Handling** — Handling networking and database errors
-- **Multithreading** — Processing multiple client connections concurrently
+- **Classes and Objects** — Organizing the application into separate components.
+- **Encapsulation** — Keeping related data and operations within classes.
+- **Constructors** — Initializing client, server, and other objects.
+- **Interfaces** — Using interfaces such as `Runnable` for client-handler threads.
+- **Exception Handling** — Handling network and database errors.
+- **Multithreading** — Managing multiple client connections concurrently.
 
-## 🎯 Project Goal
+## 📸 Screenshots
 
-CampusChat is an academic Object-Oriented Programming project that demonstrates how a desktop chat application can be built using Java Swing, socket programming, multithreading, and MySQL database integration.
+Add screenshots of your actual running application here.
 
-The project provides practical experience with client-server architecture, real-time communication, and persistent data storage.
+Suggested screenshots:
 
----
+- Login screen
+- Main chat interface
+- Two users exchanging public messages
+- Private messaging
+- MySQL database displaying saved messages and chat history
 
-**Built with ☕ Java and 💚 curiosity.**
+## 🎯 Project Objective
+
+The objective of CampusConnect is to demonstrate how Java, Object-Oriented Programming, socket-based communication, multithreading, and relational database integration can be combined to build a functional desktop messaging application.
+
+The project provides practical experience in Java application development, client-server architecture, and persistent data storage.
+
+## 👨‍💻 Academic Project
+
+**CampusConnect / CampusChat**  
+Department of Computer Science and Engineering  
+SCMS School of Engineering and Technology
+
+**Built with Java ☕**
